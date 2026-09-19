@@ -1,0 +1,65 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  firstName String
+  lastName  String
+  email     String   @unique
+  phone     String   @unique
+  password  String
+  gender    String?
+  role      String   @default("CITIZEN")
+  country   String?
+  state     String?
+  district  String?
+  city      String?
+  ward      String?
+  address   String?
+  pinCode   String?
+  createdAt DateTime @default(now())
+
+  complaints Complaint[]
+}
+
+model Complaint {
+  id              String   @id @default(cuid())
+  complaintNumber String   @unique
+  citizenId       String
+  category        String
+  title           String
+  description     String
+  city            String
+  ward            String
+  address         String
+  latitude        Float?
+  longitude       Float?
+  issueStartDate  DateTime
+  daysAffected    Int      @default(0)
+  imageUrl        String?
+  extraInfo       String?
+  priority        String   @default("MEDIUM")
+  status          String   @default("SUBMITTED")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  citizen User                     @relation(fields: [citizenId], references: [id], onDelete: Cascade)
+  history ComplaintStatusHistory[]
+}
+
+model ComplaintStatusHistory {
+  id          String   @id @default(cuid())
+  complaintId String
+  status      String
+  note        String?
+  updatedBy   String
+  createdAt   DateTime @default(now())
+
+  complaint Complaint @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+}
