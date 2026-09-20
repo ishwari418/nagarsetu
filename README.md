@@ -69,3 +69,57 @@ updates, the timeline — writes to and reads from SQLite.
 AI clustering, embeddings, risk prediction, PostGIS/geospatial, field-agent dashboard, department
 assignment, resolution verification, citizen voting, notifications, SMS/email, real OAuth, real
 CAPTCHA, multilingual translation.
+
+---
+
+# Phase 2 — Language + Location
+
+## Language
+
+Ten languages, stored on the user as `preferredLanguage`. Translations are plain JSON in
+`src/locales/` with an English fallback for any missing key. No translation API, no LLM.
+Complaint text written by citizens is never translated.
+
+- First login shows a language modal (`languageChosen` is false).
+- Change it any time at **Profile → Language preference**.
+- Server components translate with `translator(lang)`; client components use `useT()`.
+
+Full key coverage: English, Hindi, Marathi. The other seven (Bengali, Telugu, Tamil, Kannada,
+Gujarati, Malayalam, Punjabi) cover the core navigation, form, status and location labels; anything
+else falls back to English.
+
+## Location
+
+Complaint location is now independent of the citizen's registered address.
+
+- Browser Geolocation API, requested only when the citizen presses a button. No tracking, no
+  location history.
+- Reverse geocoding and place search go through `/api/geo/reverse` and `/api/geo/search`, which call
+  `src/lib/geocoding.ts`. That file is the only place that knows about the provider — swap it for
+  MapMyIndia, Photon or a self-hosted Nominatim without touching the UI.
+- Map is Leaflet + OpenStreetMap tiles. Marker is draggable and the map is tappable; both re-resolve
+  the address. Search accepts any Indian state, district, city, town, village, road or landmark.
+- The hardcoded state/city list is gone from the complaint form. It still backs the **registration**
+  form, which records the citizen's own address.
+- A complaint cannot be submitted until the citizen presses **Confirm location**.
+
+### Environment variables
+
+```
+GEOCODING_BASE_URL="https://nominatim.openstreetmap.org"
+GEOCODING_USER_AGENT="NagarSetu/1.0 (contact: you@example.com)"
+GEOCODING_COUNTRY_CODES="in"
+```
+
+No API key is involved and nothing is exposed to the browser. Nominatim's usage policy asks for a
+real contact address in the User-Agent and at most one request per second — the service throttles
+itself and caches repeat lookups in memory.
+
+### After pulling these changes
+
+```bash
+npm install
+npx prisma generate
+npx prisma db push     # adds the new columns, keeps existing rows
+npm run dev
+```

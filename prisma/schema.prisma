@@ -23,6 +23,8 @@ model User {
   ward      String?
   address   String?
   pinCode   String?
+  preferredLanguage String  @default("en")
+  languageChosen    Boolean @default(false)
   createdAt DateTime @default(now())
 
   complaints Complaint[]
@@ -40,6 +42,11 @@ model Complaint {
   address         String
   latitude        Float?
   longitude       Float?
+  country          String?
+  state            String?
+  district         String?
+  locality         String?
+  formattedAddress String?
   issueStartDate  DateTime
   daysAffected    Int      @default(0)
   imageUrl        String?

@@ -50,16 +50,27 @@ export async function createComplaint(
   const category = get("category");
   const title = get("title");
   const description = get("description");
-  const city = get("city");
-  const ward = get("ward");
   const address = get("address");
+  const latitude = Number(get("latitude"));
+  const longitude = Number(get("longitude"));
+  const city = get("city") || get("locality") || get("district");
+  const ward = get("ward") || get("locality") || city;
   const issueStartDate = get("issueStartDate");
   const daysAffected = Number(get("daysAffected") || 0);
 
   if (!CATEGORIES.includes(category as any)) return { error: "Choose a category." };
   if (title.length < 6) return { error: "Give the issue a clear title of at least 6 characters." };
   if (description.length < 20) return { error: "Describe the issue in at least 20 characters." };
-  if (!city || !ward || !address) return { error: "Complete the location of the issue." };
+  if (
+    formData.get("locationConfirmed") !== "1" ||
+    !Number.isFinite(latitude) ||
+    !Number.isFinite(longitude) ||
+    Math.abs(latitude) > 90 ||
+    Math.abs(longitude) > 180
+  ) {
+    return { error: "Please select the location of the civic issue." };
+  }
+  if (!address) return { error: "Add the street, landmark or house number at the complaint location." };
   if (!issueStartDate) return { error: "Select the date the issue started." };
   if (new Date(issueStartDate) > new Date()) return { error: "The start date cannot be in the future." };
   if (Number.isNaN(daysAffected) || daysAffected < 0) return { error: "Enter a valid number of days affected." };
@@ -82,11 +93,16 @@ export async function createComplaint(
       category,
       title,
       description,
-      city,
-      ward,
+      city: city || "Unknown",
+      ward: ward || "Unknown",
       address,
-      latitude: Number(get("latitude")) || null,
-      longitude: Number(get("longitude")) || null,
+      latitude,
+      longitude,
+      country: get("country") || "India",
+      state: get("state") || null,
+      district: get("district") || null,
+      locality: get("locality") || null,
+      formattedAddress: get("formattedAddress") || null,
       issueStartDate: new Date(issueStartDate),
       daysAffected,
       imageUrl,

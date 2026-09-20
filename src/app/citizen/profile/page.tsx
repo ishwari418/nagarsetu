@@ -20,6 +20,7 @@ export default async function ProfilePage() {
         ward: user.ward ?? "",
         pinCode: user.pinCode ?? "",
       }}
+      language={user.preferredLanguage || "en"}
     />
   );
 }

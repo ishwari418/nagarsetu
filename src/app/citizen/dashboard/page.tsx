@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { requireCitizen } from "@/lib/session";
 import { Card, CardHead, Empty, LinkButton, PriorityBadge, StatusBadge } from "@/components/ui";
+import { translator } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
 
@@ -16,6 +17,7 @@ function Stat({ label, value, tone = "" }: { label: string; value: number; tone?
 
 export default async function CitizenDashboard() {
   const user = await requireCitizen();
+  const t = translator(user.preferredLanguage || "en");
   const complaints = await prisma.complaint.findMany({
     where: { citizenId: user.id },
     orderBy: { createdAt: "desc" },
@@ -29,29 +31,29 @@ export default async function CitizenDashboard() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h2 className="font-display text-2xl font-semibold text-ink">Welcome, {user.firstName}</h2>
+          <h2 className="font-display text-2xl font-semibold text-ink">{t("dashboard.welcome")}, {user.firstName}</h2>
           <p className="mt-1 text-sm text-ink-muted">
             {user.ward} · {user.city}, {user.state}
           </p>
         </div>
-        <LinkButton href="/citizen/complaints/new">+ Report an issue</LinkButton>
+        <LinkButton href="/citizen/complaints/new">+ {t("nav.new")}</LinkButton>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        <Stat label="My complaints" value={complaints.length} />
-        <Stat label="Active" value={active} />
-        <Stat label="Resolved" value={resolved} tone="text-civic" />
-        <Stat label="High priority" value={byPriority("HIGH")} tone="text-clay" />
+        <Stat label={t("dashboard.myComplaints")} value={complaints.length} />
+        <Stat label={t("dashboard.active")} value={active} />
+        <Stat label={t("dashboard.resolved")} value={resolved} tone="text-civic" />
+        <Stat label={t("dashboard.high")} value={byPriority("HIGH")} tone="text-clay" />
         <Stat label="Medium / low" value={byPriority("MEDIUM") + byPriority("LOW")} />
       </div>
 
       <Card>
         <CardHead
-          title="Recent complaints"
+          title={t("dashboard.recent")}
           hint="Your five most recent reports"
           action={
             <Link href="/citizen/complaints" className="text-sm font-medium text-civic hover:underline">
-              View all
+              {t("action.viewAll")}
             </Link>
           }
         />

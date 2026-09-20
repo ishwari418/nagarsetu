@@ -2,11 +2,13 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { requireCitizen } from "@/lib/session";
 import { Card, CardHead, Empty, LinkButton, PriorityBadge, StatusBadge } from "@/components/ui";
+import { translator } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
 
 export default async function MyComplaints() {
   const user = await requireCitizen();
+  const t = translator(user.preferredLanguage || "en");
   const complaints = await prisma.complaint.findMany({
     where: { citizenId: user.id },
     orderBy: { createdAt: "desc" },
@@ -15,9 +17,9 @@ export default async function MyComplaints() {
   return (
     <Card>
       <CardHead
-        title="My complaints"
+        title={t("dashboard.myComplaints")}
         hint={`${complaints.length} report${complaints.length === 1 ? "" : "s"}`}
-        action={<LinkButton href="/citizen/complaints/new">+ Report an issue</LinkButton>}
+        action={<LinkButton href="/citizen/complaints/new">+ {t("nav.new")}</LinkButton>}
       />
 
       {complaints.length === 0 ? (
@@ -32,13 +34,13 @@ export default async function MyComplaints() {
             <table className="w-full text-sm">
               <thead className="bg-paper text-left text-xs text-ink-muted">
                 <tr>
-                  <th className="px-5 py-3 font-medium">Complaint ID</th>
-                  <th className="px-3 py-3 font-medium">Category</th>
-                  <th className="px-3 py-3 font-medium">Title</th>
-                  <th className="px-3 py-3 font-medium">Location</th>
+                  <th className="px-5 py-3 font-medium">{t("field.complaintId")}</th>
+                  <th className="px-3 py-3 font-medium">{t("field.category")}</th>
+                  <th className="px-3 py-3 font-medium">{t("field.title")}</th>
+                  <th className="px-3 py-3 font-medium">{t("field.location")}</th>
                   <th className="px-3 py-3 font-medium">Date</th>
-                  <th className="px-3 py-3 font-medium">Priority</th>
-                  <th className="px-5 py-3 font-medium">Status</th>
+                  <th className="px-3 py-3 font-medium">{t("field.priority")}</th>
+                  <th className="px-5 py-3 font-medium">{t("field.status")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-line">

@@ -4,6 +4,8 @@ import { prisma } from "@/lib/db";
 import { requireCitizen } from "@/lib/session";
 import { Card, CardHead, PriorityBadge, StatusBadge } from "@/components/ui";
 import { StatusTimeline } from "@/components/StatusTimeline";
+import { ComplaintMap } from "@/components/map/ComplaintMap";
+import { translator } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +20,7 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
 
 export default async function ComplaintDetail({ params }: { params: { id: string } }) {
   const user = await requireCitizen();
+  const t = translator(user.preferredLanguage || "en");
   const complaint = await prisma.complaint.findUnique({
     where: { id: params.id },
     include: { history: { orderBy: { createdAt: "asc" } } },
@@ -42,25 +45,44 @@ export default async function ComplaintDetail({ params }: { params: { id: string
       <div className="grid gap-5 lg:grid-cols-[1.4fr_1fr]">
         <div className="space-y-5">
           <Card>
-            <CardHead title="Complaint details" />
+            <CardHead title={t("complaint.detailsTitle")} />
             <dl className="divide-y divide-line">
-              <Row label="Category" value={complaint.category} />
-              <Row label="Description" value={<p className="whitespace-pre-line">{complaint.description}</p>} />
-              <Row label="Location" value={`${complaint.address}, ${complaint.ward}, ${complaint.city}`} />
-              {complaint.latitude && complaint.longitude && (
-                <Row label="Coordinates" value={`${complaint.latitude}, ${complaint.longitude}`} />
-              )}
+              <Row label={t("field.category")} value={complaint.category} />
+              <Row label={t("field.description")} value={<p className="whitespace-pre-line">{complaint.description}</p>} />
               <Row
-                label="Submitted"
+                label={t("field.dateReported")}
                 value={complaint.createdAt.toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}
               />
               <Row
-                label="Issue started"
+                label={t("field.issueStartDate")}
                 value={`${complaint.issueStartDate.toLocaleDateString("en-IN", {
                   dateStyle: "medium",
                 })} · ${complaint.daysAffected} day(s) affected`}
               />
               {complaint.extraInfo && <Row label="Extra notes" value={complaint.extraInfo} />}
+            </dl>
+          </Card>
+
+          <Card>
+            <CardHead title={`📍 ${t("complaint.locationTitle")}`} />
+            {complaint.latitude != null && complaint.longitude != null && (
+              <div className="px-5 pt-5">
+                <ComplaintMap lat={complaint.latitude} lng={complaint.longitude} />
+              </div>
+            )}
+            <dl className="divide-y divide-line">
+              <Row label={t("field.address")} value={complaint.formattedAddress ?? complaint.address} />
+              <Row label={t("field.area")} value={complaint.locality ?? complaint.ward} />
+              <Row label={t("field.city")} value={complaint.city} />
+              <Row label={t("field.district")} value={complaint.district ?? "—"} />
+              <Row label={t("field.state")} value={complaint.state ?? "—"} />
+              <Row label={t("field.country")} value={complaint.country ?? "India"} />
+              {complaint.latitude != null && complaint.longitude != null && (
+                <Row
+                  label={`${t("field.latitude")} / ${t("field.longitude")}`}
+                  value={`${complaint.latitude.toFixed(6)}, ${complaint.longitude.toFixed(6)}`}
+                />
+              )}
             </dl>
           </Card>
 
@@ -80,7 +102,7 @@ export default async function ComplaintDetail({ params }: { params: { id: string
         </div>
 
         <Card className="h-fit">
-          <CardHead title="Progress" hint="Updated by the ward office" />
+          <CardHead title={t("complaint.progress")} hint="Updated by the ward office" />
           <div className="px-5 py-5">
             <StatusTimeline current={complaint.status} history={complaint.history} />
           </div>

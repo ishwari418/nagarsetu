@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/session";
 import { Card, CardHead, PriorityBadge, StatusBadge } from "@/components/ui";
 import { StatusTimeline } from "@/components/StatusTimeline";
+import { ComplaintMap } from "@/components/map/ComplaintMap";
 import { UpdateComplaintForm } from "./UpdateComplaintForm";
 
 export const dynamic = "force-dynamic";
@@ -47,10 +48,6 @@ export default async function AdminComplaintDetail({ params }: { params: { id: s
             <dl className="divide-y divide-line">
               <Row label="Category" value={complaint.category} />
               <Row label="Description" value={<p className="whitespace-pre-line">{complaint.description}</p>} />
-              <Row label="Location" value={`${complaint.address}, ${complaint.ward}, ${complaint.city}`} />
-              {complaint.latitude && complaint.longitude && (
-                <Row label="Coordinates" value={`${complaint.latitude}, ${complaint.longitude}`} />
-              )}
               <Row
                 label="Submitted"
                 value={complaint.createdAt.toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}
@@ -62,6 +59,29 @@ export default async function AdminComplaintDetail({ params }: { params: { id: s
                 })} · ${complaint.daysAffected} day(s)`}
               />
               {complaint.extraInfo && <Row label="Extra notes" value={complaint.extraInfo} />}
+            </dl>
+          </Card>
+
+          <Card>
+            <CardHead title="📍 Complaint location" hint="Where the reported problem is." />
+            {complaint.latitude != null && complaint.longitude != null && (
+              <div className="px-5 pt-5">
+                <ComplaintMap lat={complaint.latitude} lng={complaint.longitude} />
+              </div>
+            )}
+            <dl className="divide-y divide-line">
+              <Row label="Address" value={complaint.formattedAddress ?? complaint.address} />
+              <Row label="Landmark" value={complaint.address} />
+              <Row label="Area / ward" value={complaint.locality ?? complaint.ward} />
+              <Row label="City / village" value={complaint.city} />
+              <Row label="District" value={complaint.district ?? "—"} />
+              <Row label="State" value={complaint.state ?? "—"} />
+              {complaint.latitude != null && complaint.longitude != null && (
+                <Row
+                  label="Coordinates"
+                  value={`${complaint.latitude.toFixed(6)}, ${complaint.longitude.toFixed(6)}`}
+                />
+              )}
             </dl>
           </Card>
 

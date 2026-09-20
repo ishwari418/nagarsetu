@@ -5,16 +5,21 @@ import { updateProfile } from "@/lib/actions/auth";
 import { Alert, Card, CardHead, Field, Input, Select, Textarea } from "@/components/ui";
 import { SubmitButton } from "@/components/SubmitButton";
 import { GENDERS } from "@/lib/location";
+import { LANGUAGES } from "@/lib/i18n";
+import { setLanguage } from "@/lib/actions/language";
+import { useT } from "@/components/LanguageProvider";
 
 type UserView = Record<string, string>;
 
-export function ProfileForm({ user }: { user: UserView }) {
+export function ProfileForm({ user, language }: { user: UserView; language: string }) {
   const [state, action] = useFormState(updateProfile, {});
+  const [langState, langAction] = useFormState(setLanguage, {});
+  const t = useT();
 
   return (
     <div className="max-w-3xl space-y-6">
       <Card>
-        <CardHead title="Profile" hint="Kept with your complaints so the ward office can reach you." />
+        <CardHead title={t("nav.profile")} hint="Kept with your complaints so the ward office can reach you." />
         <form action={action} className="space-y-5 px-5 py-5">
           {state.error && <Alert>{state.error}</Alert>}
           {state.ok && <Alert tone="success">Profile updated.</Alert>}
@@ -59,7 +64,33 @@ export function ProfileForm({ user }: { user: UserView }) {
             </div>
           </div>
 
-          <SubmitButton pendingText="Saving…">Save changes</SubmitButton>
+          <SubmitButton pendingText="Saving…">{t("action.save")}</SubmitButton>
+        </form>
+      </Card>
+
+      <Card>
+        <CardHead
+          title={t("language.preference")}
+          hint="NagarSetu screens are shown in this language. Complaint text is never translated."
+        />
+        <form action={langAction} className="space-y-4 px-5 py-5">
+          {langState.error && <Alert>{langState.error}</Alert>}
+          {langState.ok && <Alert tone="success">Language updated.</Alert>}
+
+          <div className="max-w-xs">
+            <Field label={t("language.preference")} htmlFor="language">
+              <Select id="language" name="language" defaultValue={language}>
+                {LANGUAGES.map((l) => (
+                  <option key={l.code} value={l.code}>
+                    {l.native}
+                    {l.code === "en" ? "" : ` — ${l.label}`}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+          </div>
+
+          <SubmitButton pendingText="Saving…">{t("action.save")}</SubmitButton>
         </form>
       </Card>
     </div>

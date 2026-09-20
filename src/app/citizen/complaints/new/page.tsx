@@ -60,7 +60,7 @@ export default async function NewComplaintPage({
           Tell the ward office where the problem is, what it is, and how long it has been going on.
         </p>
       </div>
-      <ComplaintForm defaultAddress={user.address ?? ""} />
+      <ComplaintForm />
     </div>
   );
 }
